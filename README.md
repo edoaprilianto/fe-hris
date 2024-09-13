@@ -6,6 +6,10 @@ Please Install all of package :
 
 1. ### `npm install`
 
+2. ## login access ##
+   email : edo@fortiushris.com
+   password: password123
+
 ## Available Scripts
 In the project directory, you can run:
 

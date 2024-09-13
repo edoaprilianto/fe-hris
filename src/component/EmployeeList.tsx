@@ -1,5 +1,11 @@
-import React, { useEffect, useState, ChangeEvent, MouseEvent } from "react";
+import "../App.css";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
+import EmployeeForm from "./EmployeeForm";
+
+import { useNavigate } from 'react-router-dom';
+
+
 
 // Define types for employee and form data
 interface Employee {
@@ -14,15 +20,54 @@ interface Employee {
 const EmployeeList: React.FC = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [search, setSearch] = useState<string>("");
+  const navigate = useNavigate();
+
 
 
   // Fetch employees once on component mount
   useEffect(() => {
-    axios
-      .get("http://127.0.0.1:9001/api/employees")
-      .then((response) => setEmployees(response.data.data))
-      .catch((error) => console.error(error));
-  }, []);
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/');
+      return;
+    }
+
+    const fetchEmployees = async () => {
+      try {
+        const response = await axios.get('http://127.0.0.1:9001/api/employees', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setEmployees(response.data.data);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchEmployees();
+  }, [navigate]);
+
+  const handleLogout = async () => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        await axios.post(
+          'http://127.0.0.1:9001/api/logout',
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        localStorage.removeItem('token');
+        navigate('/');
+      } catch (error) {
+        console.error('Logout failed', error);
+      }
+    }
+  };
 
  
 
@@ -30,12 +75,13 @@ const EmployeeList: React.FC = () => {
    const filteredEmployees = employees.filter((employee) =>
    employee.name.toLowerCase().includes(search.toLowerCase())
  );
+  
 
-
-  return (
+  return (  
     <div>
+      <EmployeeForm />
       <h2>Employee List</h2>
-      <table
+           <table
         cellPadding="10"
         cellSpacing="0"
         style={{ width: "100%", borderCollapse: "collapse" }}
@@ -44,7 +90,7 @@ const EmployeeList: React.FC = () => {
           <tr>
             <th>Name</th>
             <th>Email</th>
-            <th>Position</th>
+            <th>Department</th>
             <th>Hourly Rate</th>
           </tr>
         </thead>
@@ -55,8 +101,9 @@ const EmployeeList: React.FC = () => {
                 <>
                     <td>{employee.name}</td>
                     <td>{employee.email}</td>
-                    <td>{employee.hourly_rate}</td>
                     <td>{employee.department}</td>
+                    <td>{employee.hourly_rate}</td>
+
                   </>
               </tr>
             ))
@@ -69,6 +116,9 @@ const EmployeeList: React.FC = () => {
           )}
         </tbody>
       </table>
+      <button onClick={handleLogout} style={{ marginBottom: '20px' }}>
+        Logout user
+      </button>
     </div>
   );
 };

@@ -1,16 +1,20 @@
-import React from "react";
-import "./App.css";
-import EmployeeForm from "./component/EmployeeForm";
-import EmployeeList from "./component/EmployeeList";
+// App.tsx or Router.tsx (Routing setup)
 
-function App() {
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Login from './login';
+import EmployeeList from './component/EmployeeList';
+import EmployeeForm from './component/EmployeeForm';
+
+const App = () => {
   return (
-    <div className="App">
-      <EmployeeForm />
-      <EmployeeList />
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/employee-list" element={<EmployeeList />} />
+        <Route path="/employee-form" element={<EmployeeForm />} />
+      </Routes>
+    </Router>
   );
-}
+};
+
 export default App;
-
-

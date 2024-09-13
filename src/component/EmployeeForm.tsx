@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
+import "../App.css";
 import axios from 'axios';
-
 
 // Define the form schema using Yup
 const schema = yup.object().shape({
@@ -21,21 +21,12 @@ const schema = yup.object().shape({
     .matches(/[0-9]/, "Password must contain at least one number")
     .matches(/[!@#$%^&*]/, "Password must contain at least one special character")
     .required("Password is required"),
-
-    justification: yup.string().when("hourly_rate", (hourly_rate, schema) => {
-        if(hourly_rate)
-          return schema.required("the justification is required")
-          return schema
-      })
-
-    // justification: yup.string().when('hourly_rate', {
-    //     is: (hourly_rate: any) => hourly_rate >= 50,
-    //     then: yup.string().required('Justification is required for rates above 50'),
-    //     otherwise: yup.string(),
-    //   }),
-      
-      
-
+  justification: yup.string().when("hourly_rate", (hourly_rate : any, schema) => {
+    if (hourly_rate > 50) {
+      return schema.required("Justification is required for rates above 50");
+    }
+    return schema;
+  }),
 });
 
 // Define form data types
@@ -49,8 +40,6 @@ interface FormData {
 }
 
 const EmployeeForm: React.FC = () => {
-  const [showJustification, setShowJustification] = useState(false);
-
   const {
     register,
     handleSubmit,
@@ -60,25 +49,22 @@ const EmployeeForm: React.FC = () => {
     resolver: yupResolver(schema),
   });
 
-  const onSubmit: SubmitHandler<FormData> = (data) => {
-
-    try {
-        const token = 'YOUR_ACCESS_TOKEN'; // Replace with a valid token
-         axios.post('http://127.0.0.1:9001/api/employees', data, {
-        //   headers: {
-        //     'Authorization': `Bearer ${token}`,
-        //     'Content-Type': 'application/json',
-        //   },
-        });
-        alert('Employee added successfully');
-        window.location.reload();
-      } catch (error) {
-        console.error('Error adding employee:', error);
-        alert('An error occurred while adding the employee');
-      }
-
-
+  const onSubmit: SubmitHandler<FormData> = async (data) => {
     console.log("Form Submitted: ", data);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post('http://127.0.0.1:9001/api/employees', data, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      alert('Employee added successfully');
+      window.location.reload();
+    } catch (error) {
+      console.error('Error adding employee:', error);
+      alert('An error occurred while adding the employee');
+    }
   };
 
   // Watch hourlyRate to conditionally show/hide the justification field
@@ -117,7 +103,7 @@ const EmployeeForm: React.FC = () => {
         </div>
 
         {/* Justification Field (Conditionally Rendered) */}
-        {hourly_rate > 50 && (
+        {hourly_rate >= 50 && (
           <div>
             <label>Justification</label>
             <input {...register("justification")} />
